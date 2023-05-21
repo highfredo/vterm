@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" seamless>
+  <q-dialog ref="dialogRef" seamless @hide="onDialogHide">
     <q-card class="prompt-card">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">{{ title }}</div>
@@ -15,15 +15,15 @@
           >
             <q-input
               v-if="prompt.echo"
+              v-model="responses[idx]"
               filled
               :label="prompt.prompt"
-              v-model="responses[idx]"
             />
             <v-input-password
               v-else
+              v-model="responses[idx]"
               filled
               :label="prompt.prompt"
-              v-model="responses[idx]"
             />
           </div>
         </q-card-section>

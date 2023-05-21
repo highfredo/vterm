@@ -1,8 +1,9 @@
 <template>
-  <component :key="tab.id"
-             :is="tab.component"
-             v-bind="tab.props"
+  <component
+:is="tab.component"
              v-if="tab.alive"
+             :key="tab.id"
+             v-bind="tab.props"
   />
 </template>
 

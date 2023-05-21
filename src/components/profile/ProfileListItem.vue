@@ -1,7 +1,7 @@
 <template>
   <q-item
-    clickable
-    v-ripple>
+    v-ripple
+    clickable>
     <q-item-section avatar top class="q-mt-xs q-pl-md">
       <q-icon name="terminal" />
     </q-item-section>

@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" seamless>
+  <q-dialog ref="dialogRef" seamless @hide="onDialogHide">
     <q-card class="paste-card">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">Va a pegar texto con saltos de linea</div>
@@ -9,16 +9,16 @@
 
       <q-card-section>
         <q-input
+          v-model="txtRef"
           filled
           type="textarea"
           label="Texto"
-          v-model="txtRef"
         />
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn @click="onDialogCancel" flat>Cancel</q-btn>
-        <q-btn @click="onDialogOK(txtRef)" flat>OK</q-btn>
+        <q-btn flat @click="onDialogCancel">Cancel</q-btn>
+        <q-btn flat @click="onDialogOK(txtRef)">OK</q-btn>
       </q-card-actions>
     </q-card>
   </q-dialog>

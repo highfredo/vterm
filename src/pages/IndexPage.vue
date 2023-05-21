@@ -1,10 +1,11 @@
 <template>
   <div class="full-height force-scroll">
-    <q-btn @click="openConfig"
-           flat
-           round
-           icon="settings"
-           class="config-btn"
+    <q-btn
+      flat
+      round
+      icon="settings"
+      class="config-btn"
+      @click="openConfig"
     >
       <q-tooltip anchor="center left" self="center end">Configuración</q-tooltip>
     </q-btn>

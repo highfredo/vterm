@@ -1,12 +1,12 @@
 <template>
-  <div class="column" ref="searchField">
+  <div ref="searchField" class="column">
     <q-input
-      outlined
       v-model="search"
+      outlined
       placeholder="Buscar..."
       autofocus
     >
-      <template v-slot:append>
+      <template #append>
         <q-icon name="search"/>
       </template>
     </q-input>

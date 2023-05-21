@@ -8,9 +8,9 @@
       class="search-container bg-primary q-px-sm">
       <q-input
         ref="searchField"
+        v-model="searchQuery"
         autofocus
         borderless
-        v-model="searchQuery"
         placeholder="Buscar..."
         hide-bottom-space
         @keyup.enter.exact.prevent="findNext"

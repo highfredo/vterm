@@ -1,9 +1,9 @@
 <template>
   <splitpanes :horizontal="direction === 'horizontal'">
-    <pane :key="index" v-for="(p, index) in panels">
+    <pane v-for="(p, index) in panels" :key="index">
       <component
-        v-if="p.component"
         :is="p.component"
+        v-if="p.component"
         v-bind="p.props"
       />
       <spliteable-content

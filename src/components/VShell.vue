@@ -2,8 +2,8 @@
   <div class="full-height">
     <search-prompt :vterm="vterm"></search-prompt>
     <div
-      class="terminal q-ml-sm"
-      ref="terminal"></div>
+      ref="terminal"
+      class="terminal q-ml-sm"></div>
   </div>
 </template>
 

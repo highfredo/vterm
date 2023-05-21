@@ -9,16 +9,16 @@
           shrink
           stretch>
           <draggable
+            v-model="tabStore.tabs"
             tag="div"
             class="row no-wrap"
-            v-model="tabStore.tabs"
             group="tabs"
             :animation="150"
             item-key="id">
             <template #item="{element}">
               <tab-flap
-                @click="tabStore.currentTabId = element.id"
                 :tab="element"
+                @click="tabStore.currentTabId = element.id"
               />
             </template>
           </draggable>
@@ -30,10 +30,10 @@
         <q-btn square flat icon="settings_input_hdmi" class="q-pa-sm" @click="openTunnelsPage">
           <q-tooltip>Tuneles</q-tooltip>
         </q-btn>
-        <q-btn square flat icon="piano" class="q-pa-sm" @click="enableHotkeys = false" v-if="enableHotkeys">
+        <q-btn v-if="enableHotkeys" square flat icon="piano" class="q-pa-sm" @click="enableHotkeys = false">
           <q-tooltip>Deshabilitar shortcuts</q-tooltip>
         </q-btn>
-        <q-btn square flat icon="piano_off" class="q-pa-sm" @click="enableHotkeys = true" v-else>
+        <q-btn v-else square flat icon="piano_off" class="q-pa-sm" @click="enableHotkeys = true">
           <q-tooltip>Habilitar shortcuts</q-tooltip>
         </q-btn>
         <q-btn square flat icon="minimize" class="minimize-btn q-ml-sm q-pa-sm" @click="minimize" />

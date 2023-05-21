@@ -1,14 +1,14 @@
 <template>
   <div class="row fit">
     <div class="scroll" style="width: 300px; height: 100%; background-color: var(--q-dark)" >
-      <div class="column" ref="searchField">
+      <div ref="searchField" class="column">
         <q-input
-          class="q-mx-sm"
           v-model="q"
+          class="q-mx-sm"
           placeholder="Buscar..."
           autofocus
         >
-          <template v-slot:append>
+          <template #append>
             <q-icon name="search"/>
           </template>
         </q-input>
@@ -47,7 +47,7 @@
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-else :key="idxt" v-for="(tunnel, idxt) in profile.tunnels">
+          <q-item v-for="(tunnel, idxt) in profile.tunnels" v-else :key="idxt">
             <q-separator v-if="idxt !== 0" spaced inset="item" />
 
             <q-item-section top avatar>

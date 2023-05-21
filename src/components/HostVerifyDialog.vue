@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" seamless>
+  <q-dialog ref="dialogRef" seamless @hide="onDialogHide">
     <q-card class="host-verify-card">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">HostKey Verify</div>
@@ -16,16 +16,16 @@
 
         <div class="fit row wrap justify-end items-start content-start">
           <q-checkbox
+            v-model="storeRef"
             label="Guardar"
             left-label
-            v-model="storeRef"
           />
         </div>
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn @click="onDialogOK({valid: false, store: storeRef})" flat>Cancel</q-btn>
-        <q-btn @click="onDialogOK({valid: true, store: storeRef})" flat>OK</q-btn>
+        <q-btn flat @click="onDialogOK({valid: false, store: storeRef})">Cancel</q-btn>
+        <q-btn flat @click="onDialogOK({valid: true, store: storeRef})">OK</q-btn>
       </q-card-actions>
     </q-card>
   </q-dialog>

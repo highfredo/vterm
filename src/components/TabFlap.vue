@@ -5,17 +5,17 @@
       :label="tab.title"
       shrink
       stretch
-      @click.middle.stop.prevent="close"
       content-class="closable-tab"
       class="q-pr-sm"
+      @click.middle.stop.prevent="close"
     >
     <q-btn
       round
       unelevated
       size="xs"
       class="close-btn"
-      @click.stop.prevent="close"
       title="Cerrar pestaña"
+      @click.stop.prevent="close"
     >
       <q-icon
         name="close"

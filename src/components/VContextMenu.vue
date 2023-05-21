@@ -9,8 +9,8 @@
       <q-item
         v-for="(item, idx) in items"
         :key="idx"
-        clickable
-        v-close-popup>
+        v-close-popup
+        clickable>
         <q-item-section @click="item.action()">{{ item.label }}</q-item-section>
       </q-item>
     </q-list>
