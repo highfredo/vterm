@@ -39,3 +39,9 @@ ipcMain.handle('sftp:readdir', async (event: IpcMainInvokeEvent, profileId: stri
   const sftp = await session.sftp()
   return sftp.readdir(path)
 })
+
+ipcMain.handle('sftp:realpath', async (event: IpcMainInvokeEvent, profileId: string, path: string) => {
+  const session = await retrieveSSHSession(profileId, event.sender).init()
+  const sftp = await session.sftp()
+  return sftp.realpath(path)
+})

@@ -15,20 +15,24 @@ import SearchPrompt from 'components/SearchPrompt.vue'
 import { useHotKey } from 'src/composables/useHotkey'
 import { useQuasar } from 'quasar'
 import { ProfileParams } from 'src/types'
-import useContextMenu from 'src/composables/useContextMenu'
+import useContextMenu, { ContextMenuItem } from 'src/composables/useContextMenu'
 import useDialog from 'src/composables/useDialog'
 import PasteDialog from 'components/PasteDialog.vue'
+import { useTabStore } from 'stores/tab-store'
+import useSplitPanel from 'src/composables/useSplitPanel'
+import VSftp from 'components/VSftp.vue'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   profile: ProfileParams,
-}>(), {
-})
+}>()
 
 const terminal = ref()
 const vterm = useVTerm().create()
 const hotkey = useHotKey()
 const $q = useQuasar()
 const dialog = useDialog()
+const tabStore = useTabStore()
+const splitPanel = useSplitPanel()
 
 onMounted(() => {
   vterm.open(terminal.value, props.profile.id)
@@ -66,10 +70,22 @@ hotkey.on('clear', () => {
 }, terminal)
 
 useContextMenu().register(() => {
-  return [{
+  const menu: ContextMenuItem[] = [{
     label: 'Reconectar',
     action: () => vterm.connect(props.profile.id)
   }]
+  if(props.profile.type === 'ssh') {
+    menu.push({
+      label: 'Abrir SFTP',
+      action: () => {
+        tabStore.open({
+          ...splitPanel.new(VSftp, { profile: props.profile }),
+          title: 'Files: ' + props.profile.title
+        })
+      }
+    })
+  }
+  return menu
 })
 </script>
 

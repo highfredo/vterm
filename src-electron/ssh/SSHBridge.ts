@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 import { Prompt } from 'ssh2'
 import { ProfileParams, SshTunnelParams } from 'src/types'
+import { SFTPFile } from 'app/src-electron/ssh/SFTPClient'
 
 const api = {
   tryKeyboard(profileId: string, response: string[]) {
@@ -28,8 +29,11 @@ const api = {
   removeTunnel(profileId: string, tunnel: SshTunnelParams){
     ipcRenderer.send('ssh:remove-tunnel', profileId, tunnel)
   },
-  readdir(profileId: string, path: string): Promise<FileEntry[]> {
+  readdir(profileId: string, path: string): Promise<SFTPFile[]> {
     return ipcRenderer.invoke('sftp:readdir', profileId, path)
+  },
+  async realpath(profileId: string, path: string): Promise<string> {
+    return ipcRenderer.invoke('sftp:realpath', profileId, path)
   }
 }
 
