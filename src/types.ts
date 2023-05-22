@@ -65,6 +65,7 @@ export type VTermConfig = {
   hotkeys: Record<string, string[]>
   enableHardwareAcceleration: boolean
   multiwindow: boolean
+  closeToTray: boolean
 }
 
 /*

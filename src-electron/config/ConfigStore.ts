@@ -6,6 +6,7 @@ const store = getStore('config', {
     'last-workspace': 'workspace.yaml',
     'enableHardwareAcceleration': true,
     'multiwindow': false,
+    'closeToTray': true,
     'hotkeys': {
       'search': [
         'ctrl+f'

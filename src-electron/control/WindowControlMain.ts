@@ -1,5 +1,8 @@
 import { BrowserWindow, ipcMain, clipboard, IpcMainInvokeEvent, shell } from 'electron'
 import { cwd } from 'app/src-electron/Store'
+import { ConfigStore } from 'app/src-electron/config/ConfigStore';
+
+const configStore = ConfigStore()
 
 ipcMain.handle('window:is-maximize', () => {
   const focused = BrowserWindow.getFocusedWindow()
@@ -30,7 +33,11 @@ ipcMain.on('window:close', () => {
   const focused = BrowserWindow.getFocusedWindow()
   if(!focused) return
 
-  focused.close()
+  if(configStore.get().closeToTray) {
+    focused.hide()
+  } else {
+    focused.close()
+  }
 })
 
 ipcMain.handle('clipboard:read-text', () => {

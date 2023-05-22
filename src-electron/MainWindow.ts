@@ -1,13 +1,14 @@
-import { BrowserWindow, ipcMain, screen, shell } from 'electron'
+import { BrowserWindow, ipcMain, screen, shell, Tray, Menu, app } from 'electron'
 import * as path from 'path'
 import { getStore } from 'app/src-electron/Store'
 import { ConfigStore } from 'app/src-electron/config/ConfigStore'
 
-const app = getStore('app');
+const appStore = getStore('app');
 const config = ConfigStore().get();
+const iconFolder = path.resolve(process.env.DEV ? 'src-electron' : __dirname, 'icons')
 
 function getNewWindowBounds() {
-  const bounds = app.get('winBounds');
+  const bounds = appStore.get('winBounds');
   if(!bounds) return;
 
   const options = {x: undefined, y: undefined, width: undefined, height: undefined, maximize: false};
@@ -38,6 +39,25 @@ function getNewWindowBounds() {
   return options;
 }
 
+const createSystray = (window: BrowserWindow): Tray => {
+  const tray = new Tray(path.resolve(iconFolder, 'icon.ico'))
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Abrir',
+      click: () => window.show()
+    }, {
+      label: 'Cerrar',
+      click:  () => window.close()
+    }
+  ])
+
+  tray.setToolTip('VTerm')
+  tray.setContextMenu(contextMenu)
+  tray.on('double-click', () => window.show())
+
+  return tray
+}
+
 export async function createWindow() {
   /**
    * Splash screen setup
@@ -61,7 +81,7 @@ export async function createWindow() {
    */
   const bounds = getNewWindowBounds();
   const mainWindow = new BrowserWindow({
-    icon: path.resolve(__dirname, 'icons/icon.png'), // tray icon
+    icon: path.resolve(iconFolder, 'icon.png'), // tray icon
     show: false, // Use 'ready-to-show' event to show window
     frame: false,
     webPreferences: {
@@ -98,7 +118,7 @@ export async function createWindow() {
 
   // Recuerda posicion, para luego abrirse en el mismo lugar
   mainWindow.on('close', () => {
-    app.set('winBounds', {
+    appStore.set('winBounds', {
       ...mainWindow.getBounds(),
       maximize: mainWindow.isMaximized(),
     });
@@ -121,6 +141,13 @@ export async function createWindow() {
    */
   mainWindow.loadURL(process.env.APP_URL)
 
+  /**
+   * System Tray
+   */
+  let tray: Tray | undefined
+  mainWindow.on('hide', () => tray = createSystray(mainWindow))
+  mainWindow.on('show', () => tray?.destroy())
+
   return mainWindow;
 }
 
@@ -141,6 +168,8 @@ export async function restoreOrCreateWindow() {
 
   if (window.isMinimized()) {
     window.restore();
+  } else if(!window.isVisible()) {
+    window.show();
   }
 
   window.focus();
