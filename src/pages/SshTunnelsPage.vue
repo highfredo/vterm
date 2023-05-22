@@ -47,9 +47,7 @@
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-for="(tunnel, idxt) in profile.tunnels" v-else :key="idxt">
-            <q-separator v-if="idxt !== 0" spaced inset="item" />
-
+          <q-item v-for="(tunnel, idxt) in profile.tunnels" v-else :key="idxt" class="q-my-md">
             <q-item-section top avatar>
               <q-avatar color="primary" text-color="white" icon="computer" />
             </q-item-section>
