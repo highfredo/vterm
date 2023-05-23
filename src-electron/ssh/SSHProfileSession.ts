@@ -107,6 +107,9 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
       })
     }
 
+    this.tunnels.forEach(t => {
+      t.status = 'starting'
+    })
     this.status = 'starting'
     this.error = undefined
 
@@ -136,15 +139,23 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
 
     this.client.once('error', (error) => {
       log.debug(error)
-      this.status = 'stopped'
       this.error = error
+      this.tunnels.forEach(t => {
+        t.server?.close()
+      })
+      this.tunnels = []
+      this.status = 'stopped'
     })
 
     this.client.once('close', () => {
-      this.status = 'stopped'
+      this.tunnels.forEach(t => {
+        t.server?.close()
+      })
+      this.tunnels = []
       if(this.jumpSession) {
         config.sock?.destroy()
       }
+      this.status = 'stopped'
     })
 
     if(this.jumpSession) {
@@ -185,15 +196,17 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
   async localTunnel(config: SshLocalTunnelParams) {
     this.uses++
 
-    const tunnel: SshTunnel = {
-      status: 'starting',
-      server: undefined,
-      error: undefined,
-      config
+    let tunnel = this.findTunnel(config)
+    if(!tunnel) {
+      tunnel = {
+        status: 'stopped',
+        server: undefined,
+        error: undefined,
+        config
+      }
+      this.tunnels.push(tunnel)
     }
 
-    this.tunnels.push(tunnel)
-    this.emit('update')
     if(this.status === 'started') {
       await this.startLocalTunnel(tunnel)
     }
@@ -201,6 +214,8 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
 
   private async startLocalTunnel(tunnel: SshTunnel) {
     try {
+      tunnel.status = 'starting'
+      this.emit('update')
       const channel = await this.client.localTunnel(tunnel.config)
       tunnel.status = 'started'
       tunnel.server = channel

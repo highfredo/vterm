@@ -22,7 +22,6 @@ export class SSHClient extends EventEmitter {
   hostVerifierCallback: VerifyCallback | undefined
 
   async connect(config: ConnectConfig): Promise<void> {
-    // TODO cerrar si está levantado
     return new Promise((resolve, reject) => {
       log.debug('conectando...')
 
@@ -56,6 +55,8 @@ export class SSHClient extends EventEmitter {
 
       this.client.once('close', () => {
         this.keyboardInteractiveFinish = undefined
+        this.hostVerifierCallback = undefined
+        this.emit('close')
       })
 
       this.client.connect({
@@ -91,19 +92,24 @@ export class SSHClient extends EventEmitter {
     log.debug('Creando tunel', config)
 
     return await openServer(config.localHost, config.localPort, async (socket) => {
-      const channel = await this.forwardOut(
-        config.localHost,  config.localPort,
-        config.remoteHost, config.remotePort
-      )
+      try {
+        const channel = await this.forwardOut(
+          socket.remoteAddress ?? '127.0.0.1', socket.remotePort ?? 0,
+          config.remoteHost, config.remotePort
+        )
 
-      channel.pipe(socket)
-      socket.pipe(channel)
-      channel.on('close', () => {
+        channel.pipe(socket)
+        socket.pipe(channel)
+        channel.on('close', () => {
+          socket.destroy()
+        })
+        socket.on('close', () => {
+          channel.close()
+        })
+      } catch (e) {
+        log.error(e)
         socket.destroy()
-      })
-      socket.on('close', () => {
-        channel.close()
-      })
+      }
     })
   }
 
