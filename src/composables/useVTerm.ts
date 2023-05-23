@@ -3,7 +3,7 @@ import { IBaseShellHandler, ShellDimensions } from 'src/types'
 import { v4 } from 'uuid'
 import {FitAddon} from 'xterm-addon-fit'
 import {WebLinksAddon} from 'xterm-addon-web-links'
-import {SearchAddon, ISearchOptions} from 'xterm-addon-search'
+import {SearchAddon} from 'xterm-addon-search'
 import { WebglAddon } from 'xterm-addon-webgl'
 // import { CanvasAddon } from 'xterm-addon-canvas'
 import { useConfigStore } from 'stores/config-store'
@@ -17,10 +17,8 @@ const enableHotkeys = ref(true)
 export interface VTerm<T extends IBaseShellHandler> {
   terminal: Terminal
   handler: Ref<T | undefined>
+  search: SearchAddon
 
-  findNext: (term: string, searchOptions?: ISearchOptions) => boolean
-  findPrevious: (term: string, searchOptions?: ISearchOptions) => boolean
-  onDidChangeResults: (cb: (resultIndex: number, resultCount: number) => void) => void
   close: () => void
   dimensions: () => ShellDimensions
   open(element: HTMLElement, profileId?: string): void
@@ -33,7 +31,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   id: string
   terminal: Terminal
   handler: Ref<IBaseShellHandler | undefined> = ref()
-  searchAddon: SearchAddon
+  search: SearchAddon
   fitAddon: FitAddon
   stopFitWatch: WatchStopHandle | undefined
 
@@ -58,8 +56,8 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
     /**
      * Search Addon
      */
-    this.searchAddon = new SearchAddon()
-    this.terminal.loadAddon(this.searchAddon)
+    this.search = new SearchAddon()
+    this.terminal.loadAddon(this.search)
 
     /**
      * WebLinks Addon
@@ -80,7 +78,12 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
     const hk = useHotKey()
     this.terminal.attachCustomKeyEventHandler((evt: KeyboardEvent) => {
       if(enableHotkeys.value) {
-        return !hk.addKeyEvent(evt)
+        const found = hk.addKeyEvent(evt)
+        if(found) {
+          evt.stopPropagation()
+          evt.preventDefault()
+        }
+        return !found
       } else {
         return true
       }
@@ -100,22 +103,6 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
       height: this.terminal.element?.clientHeight ?? 400,
       width: this.terminal.element?.clientWidth ?? 800,
     }
-  }
-
-  findNext(term: string, searchOptions?: ISearchOptions): boolean {
-    return this.searchAddon.findNext(term, searchOptions);
-  }
-
-  findPrevious(term: string, searchOptions?: ISearchOptions): boolean {
-    return this.searchAddon.findPrevious(term, searchOptions);
-  }
-
-  onDidChangeResults(cb: (resultIndex: number, resultCount: number) => void) {
-    console.log('onDidChangeResults')
-    this.searchAddon.onDidChangeResults((data) => {
-      const {resultIndex, resultCount} = data ?? { resultIndex: -1, resultCount: -1 }
-      cb(resultIndex, resultCount)
-    })
   }
 
   open(element: HTMLElement, profileId?: string): void {

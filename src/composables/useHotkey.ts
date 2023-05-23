@@ -127,8 +127,6 @@ const api = {
     calcHotkeyMatch(event)
     if(hotkeyMatch) {
       console.log('hk match:', hotkeyMatch)
-      event.stopPropagation()
-      event.preventDefault()
       emitter.dispatchEvent(new CustomEvent(hotkeyMatch, {
         detail: {
           event,

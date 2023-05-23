@@ -47,14 +47,16 @@ const $q = useQuasar()
 
 const searchOptionsObj: ISearchOptions = {
   decorations: {
-    matchOverviewRuler: '#fff200',
-    activeMatchColorOverviewRuler: '#fff200'
+    matchBackground: '#888888',
+    matchOverviewRuler: '#888888',
+    activeMatchBackground: '#fff200',
+    activeMatchColorOverviewRuler: '#fff200',
   }
 }
 
 const findNext = () => {
   // searchHistory.value.value.push(searchQuery.value)
-  searchFound.value = props.vterm.findNext(searchQuery.value, searchOptionsObj)
+  searchFound.value = props.vterm.search.findNext(searchQuery.value, searchOptionsObj)
   if(!searchFound.value) {
     $q.notify('No hay resultados')
   }
@@ -62,7 +64,7 @@ const findNext = () => {
 
 const findPrevious = () => {
   // searchHistory.value.value.push(searchQuery.value)
-  searchFound.value = props.vterm.findPrevious(searchQuery.value, searchOptionsObj)
+  searchFound.value = props.vterm.search.findPrevious(searchQuery.value, searchOptionsObj)
   if(!searchFound.value) {
     $q.notify('No hay resultados')
   }
@@ -71,9 +73,16 @@ const findPrevious = () => {
 const hideSearchBar = () => {
   showSearch.value = false
   searchQuery.value = ''
+  props.vterm.search.clearDecorations()
+  props.vterm.search.clearActiveDecoration()
 }
 
-props.vterm.onDidChangeResults((resultIndex: number, resultCount: number) => {
+// Clear decorations!
+type Result = {
+  resultIndex: number
+  resultCount: number
+}
+props.vterm.search.onDidChangeResults(({ resultIndex, resultCount }: Result) => {
   if(resultCount < 0) {
     searchInfo.value = searchQuery.value ? '+1k' : ''
   } else {
