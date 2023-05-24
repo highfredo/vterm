@@ -33,9 +33,9 @@ export const verify = async (host: string, key: Buffer): Promise<boolean> => {
 export const addToKnownHost = async (host: string, key: Buffer) => {
   await ensureFile(FILE)
   const dec = new TextDecoder()
-  const type = dec.decode(key).split(/(\x00\x00\x00\x07)|(\x00\x00\x00\x01)/)[3]
+  const type = dec.decode(key).split('\x00\x00\x00')[1]
   const line = await readLastsLines.read(FILE, 1)
-  let newline = `${host} ${type} ${Buffer.from(key).toString('base64')}\n`
+  let newline = `${host} ${type.replace(/\p{C}/gu, '').trim()} ${Buffer.from(key).toString('base64')}\n`
   if(line && !line.endsWith('\n')) {
     newline = '\n' + newline
   }
