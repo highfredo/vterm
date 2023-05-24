@@ -1,9 +1,11 @@
 import {
+  AuthenticationType,
   Client,
   ClientChannel,
   ClientErrorExtensions,
   ConnectConfig,
   KeyboardInteractiveCallback,
+  NextAuthHandler,
   Prompt,
   PseudoTtyOptions,
   VerifyCallback
@@ -12,7 +14,7 @@ import { SshLocalTunnelParams } from 'src/types'
 import log from 'electron-log'
 import { Server } from 'net'
 import { EventEmitter } from 'events'
-import { openServer } from 'app/src-electron/utils'
+import { eventToPromise, openServer } from 'app/src-electron/utils'
 import { verify } from 'app/src-electron/ssh/SshHostVerifier'
 import { SFTPClient } from 'app/src-electron/ssh/SFTPClient'
 
@@ -20,61 +22,75 @@ export class SSHClient extends EventEmitter {
   private client = new Client()
   keyboardInteractiveFinish: KeyboardInteractiveCallback | undefined
   hostVerifierCallback: VerifyCallback | undefined
+  validHostkey = false
+
+  constructor() {
+    super()
+
+    this.client.on('banner', (banner: string) => {
+      this.emit('banner', banner)
+    })
+
+    this.client.on('keyboard-interactive', (name: string, instructions: string, lang: string, prompts: Prompt[], finish: KeyboardInteractiveCallback) => {
+      this.keyboardInteractiveFinish = finish
+      this.emit('try-keyboard', prompts)
+    })
+
+    this.client.on('ready', async () => {
+      this.emit('ready')
+    })
+
+    this.client.on('error', (err: Error & ClientErrorExtensions) => {
+      if(!this.validHostkey && err.message === 'All configured authentication methods failed') {
+        return this.emit('error', new Error('hostkey not valid'))
+      }
+      this.emit('error', err)
+    })
+
+    this.client.on('close', () => {
+      this.keyboardInteractiveFinish = undefined
+      this.hostVerifierCallback = undefined
+      this.emit('close')
+    })
+  }
 
   async connect(config: ConnectConfig): Promise<void> {
-    return new Promise((resolve, reject) => {
-      log.debug('conectando...')
+    log.debug('conectando...')
 
-      this.client.once('banner', (banner: string) => {
-        this.emit('banner', banner)
-      })
+    const authTypes = ['none', 'password', 'publickey', 'agent', 'keyboard-interactive', 'hostbased']
+    let handshakePromise = Promise.resolve(false)
+    this.client.connect({
+      ...config,
+      hostVerifier: async (key: Buffer) => {
+        handshakePromise = verify(config.host ?? 'localhost', key).then(inKnownHosts => {
+          if(inKnownHosts) {
+            this.validHostkey = true
+            return true
+          }
 
-      this.client.once('keyboard-interactive', (name: string, instructions: string, lang: string, prompts: Prompt[], finish: KeyboardInteractiveCallback) => {
-        this.keyboardInteractiveFinish = finish
-        this.emit('try-keyboard', prompts)
-      })
-
-      let handshakePromise = Promise.resolve(true)
-      this.client.once('ready', async () => {
-        const valid = await handshakePromise
-        if(valid) {
-          log.debug('conectado!')
-          this.emit('ready')
-          resolve(undefined)
-        } else {
-          log.debug('hostkey not valid')
-          this.emit('error', new Error('hostkey not valid'))
-          reject('hostkey not valid')
-        }
-      })
-
-      this.client.once('error', (err: Error & ClientErrorExtensions) => {
-        this.emit('error', err)
-        reject(err)
-      })
-
-      this.client.once('close', () => {
-        this.keyboardInteractiveFinish = undefined
-        this.hostVerifierCallback = undefined
-        this.emit('close')
-      })
-
-      this.client.connect({
-        ...config,
-        hostVerifier: async (key: Buffer) => {
-          verify(config.host ?? 'localhost', key).then(inKnownHosts => {
-            if(inKnownHosts)
-              return
-            handshakePromise = new Promise(resolve => {
-              this.hostVerifierCallback = (result: boolean) => resolve(result)
-              this.emit('verify-hostkey', key)
-            })
+          return new Promise(resolve => {
+            this.hostVerifierCallback = (result: boolean) => {
+              this.validHostkey = result
+              resolve(result)
+            }
+            this.emit('verify-hostkey', key)
           })
+        })
 
-          return true
-        }
-      })
+        return true
+      },
+      authHandler(authsLeft: AuthenticationType[], partialSuccess: boolean, next: NextAuthHandler) {
+        handshakePromise.then(async (hostValid) => {
+          if(hostValid) {
+            next(authTypes.shift())
+          } else {
+            next(false)
+          }
+        })
+      }
     })
+
+    await eventToPromise(this)
   }
 
   shell(window: PseudoTtyOptions): Promise<ClientChannel> {

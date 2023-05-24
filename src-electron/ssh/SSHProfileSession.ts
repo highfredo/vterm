@@ -54,6 +54,7 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
   error?: any
   $status: RunStatusOpts = 'stopped'
   $uses = 0
+  $init: Promise<void> | undefined
 
   get status() {
     return this.$status
@@ -76,6 +77,43 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
     public jumpSession?: SSHProfileSession
   ) {
     super()
+
+    this.client.on('ready', () => {
+      this.status = 'started'
+      this.emit('ready')
+    })
+
+    this.client.on('try-keyboard', (prompts: Prompt[]) => {
+      this.emit('try-keyboard', prompts)
+    })
+
+    this.client.on('verify-hostkey', (valid: boolean) => {
+      this.emit('verify-hostkey', valid)
+    })
+
+    this.client.on('banner', (banner: string) => {
+      this.emit('banner', banner)
+    })
+
+    this.client.on('error', (error) => {
+      log.debug(error)
+      this.$init = undefined
+      this.error = error
+      this.tunnels.forEach(t => {
+        t.server?.close()
+      })
+      this.tunnels = []
+      this.status = 'stopped'
+    })
+
+    this.client.on('close', () => {
+      this.$init = undefined
+      this.tunnels.forEach(t => {
+        t.server?.close()
+      })
+      this.tunnels = []
+      this.status = 'stopped'
+    })
   }
 
   info(): SshProfileInfo {
@@ -99,12 +137,9 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
   }
 
   async init(): Promise<SSHProfileSession> {
-    if(this.status === 'started') {
+    if(this.$init) {
+      await this.$init
       return this
-    } else if(this.status === 'starting') {
-      return new Promise(resolve => {
-        this.client.once('ready', () => resolve(this))
-      })
     }
 
     this.tunnels.forEach(t => {
@@ -120,45 +155,10 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
       tryKeyboard: true,
     }
 
-    this.client.once('ready', () => {
-      this.status = 'started'
-      this.emit('ready')
-    })
-
-    this.client.once('try-keyboard', (prompts: Prompt[]) => {
-      this.emit('try-keyboard', prompts)
-    })
-
-    this.client.once('verify-hostkey', (valid: boolean) => {
-      this.emit('verify-hostkey', valid)
-    })
-
-    this.client.once('banner', (banner: string) => {
-      this.emit('banner', banner)
-    })
-
-    this.client.once('error', (error) => {
-      log.debug(error)
-      this.error = error
-      this.tunnels.forEach(t => {
-        t.server?.close()
-      })
-      this.tunnels = []
-      this.status = 'stopped'
-    })
-
-    this.client.once('close', () => {
-      this.tunnels.forEach(t => {
-        t.server?.close()
-      })
-      this.tunnels = []
-      if(this.jumpSession) {
-        config.sock?.destroy()
-      }
-      this.status = 'stopped'
-    })
-
     if(this.jumpSession) {
+      this.client.once('close', () => {
+        config.sock?.destroy()
+      })
       await this.jumpSession.init()
       config.sock = await this.jumpSession.forwardOut('127.0.0.1', 0, this.profile.host, this.profile.port ?? 22)
     }
@@ -166,7 +166,8 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
     this.emit('starting')
     this.emit('update')
 
-    await this.client.connect(config)
+    this.$init = this.client.connect(config)
+    await this.$init
 
     this.emit('update')
 
@@ -199,12 +200,13 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
     let tunnel = this.findTunnel(config)
     if(!tunnel) {
       tunnel = {
-        status: 'stopped',
+        status: 'starting',
         server: undefined,
         error: undefined,
         config
       }
       this.tunnels.push(tunnel)
+      this.emit('update')
     }
 
     if(this.status === 'started') {
@@ -214,8 +216,10 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
 
   private async startLocalTunnel(tunnel: SshTunnel) {
     try {
-      tunnel.status = 'starting'
-      this.emit('update')
+      if(tunnel.status !== 'starting') {
+        tunnel.status = 'starting'
+        this.emit('update')
+      }
       const channel = await this.client.localTunnel(tunnel.config)
       tunnel.status = 'started'
       tunnel.server = channel

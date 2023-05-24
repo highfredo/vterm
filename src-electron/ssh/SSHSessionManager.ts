@@ -21,23 +21,23 @@ export const retrieveSSHSession = (profileId: string, sender: WebContents, notif
       profile.jumpProfile ? retrieveSSHSession(profile.jumpProfile, sender, notify) : undefined
     )
 
-    session.once('starting', () => {
+    session.on('starting', () => {
       notify('Conectando: ' + session.profile.host)
     })
 
-    session.once('ready', () => {
+    session.on('ready', () => {
       notify('Conectado: ' + session.profile.host)
     })
 
-    session.once('banner', (banner: string) => {
+    session.on('banner', (banner: string) => {
       notify(banner)
     })
 
-    session.once('try-keyboard', (prompts: Prompt[]) => {
+    session.on('try-keyboard', (prompts: Prompt[]) => {
       sender.send('ssh:try-keyboard', session.profile, prompts)
     })
 
-    session.once('verify-hostkey', (hostkey: Buffer) => {
+    session.on('verify-hostkey', (hostkey: Buffer) => {
       sender.send('ssh:verify-hostkey', session.profile, hostkey)
     })
 
