@@ -3,6 +3,7 @@ import { IPty, spawn } from 'node-pty'
 import WebContents = Electron.WebContents
 import log from 'electron-log'
 import { Connection } from './ShellConnector'
+import { homedir } from 'os';
 
 export class LocalConnection extends Connection {
 
@@ -18,6 +19,7 @@ export class LocalConnection extends Connection {
 
   async init() {
     this.ptyProcess = spawn(this.profile.exe, this.profile.args ?? '', {
+      cwd: homedir(),
       ...this.profile,
       cols: this.shellRequest.cols,
       rows: this.shellRequest.rows
