@@ -13,7 +13,7 @@ const { configure } = require('quasar/wrappers');
 const path = require('path');
 
 module.exports = configure(function (/* ctx */) {
-  return {
+  const options = {
     eslint: {
       // fix: true,
       // include = [],
@@ -203,4 +203,15 @@ module.exports = configure(function (/* ctx */) {
       // extendBexManifestJson (json) {}
     }
   }
+
+  if(process.argv.includes('--stats')) {
+    options.build.vitePlugins.push(['rollup-plugin-visualizer', {
+      gzipSize: true,
+      brotliSize: true,
+      open: true,
+      filename: '.quasar/stats.html',
+    }])
+  }
+
+  return options
 });
