@@ -4,6 +4,7 @@ import { SSHProfileSession } from 'app/src-electron/ssh/SSHProfileSession'
 import log from 'electron-log'
 import { Prompt } from 'ssh2'
 import { ProfilesStore } from 'app/src-electron/profiles/ProfilesStore'
+import { debounce } from 'lodash'
 
 
 const sshSessions: MapCache<SSHProfileSession> = {}
@@ -49,9 +50,9 @@ export const retrieveSSHSession = (profileId: string, sender: WebContents, notif
       }
     })
 
-    session.on('update', () => {
+    session.on('update', debounce(() => {
       sender.send('profile:update', session.info())
-    })
+    }, 300, {maxWait: 300, leading: true}))
 
     sshSessions[profileId] = session
   }
