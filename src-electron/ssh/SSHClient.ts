@@ -1,4 +1,5 @@
 import {
+  AnyAuthMethod,
   AuthenticationType,
   Client,
   ClientChannel,
@@ -31,11 +32,6 @@ export class SSHClient extends EventEmitter {
       this.emit('banner', banner)
     })
 
-    this.client.on('keyboard-interactive', (name: string, instructions: string, lang: string, prompts: Prompt[], finish: KeyboardInteractiveCallback) => {
-      this.keyboardInteractiveFinish = finish
-      this.emit('try-keyboard', prompts)
-    })
-
     this.client.on('ready', async () => {
       this.emit('ready')
     })
@@ -57,7 +53,7 @@ export class SSHClient extends EventEmitter {
   async connect(config: ConnectConfig): Promise<void> {
     log.debug('conectando...')
 
-    const authTypes = ['none', 'password', 'publickey', 'agent', 'keyboard-interactive', 'hostbased']
+    const authMethods = this.buildAuthMethods(config)
     let handshakePromise = Promise.resolve(false)
     this.client.connect({
       ...config,
@@ -82,7 +78,7 @@ export class SSHClient extends EventEmitter {
       authHandler(authsLeft: AuthenticationType[], partialSuccess: boolean, next: NextAuthHandler) {
         handshakePromise.then(async (hostValid) => {
           if(hostValid) {
-            next(authTypes.shift())
+            next(authMethods.next().value)
           } else {
             next(false)
           }
@@ -91,6 +87,69 @@ export class SSHClient extends EventEmitter {
     })
 
     await eventToPromise(this)
+  }
+
+  private *buildAuthMethods(config: ConnectConfig): Generator<AuthenticationType | AnyAuthMethod> {
+    log.debug('auth: none')
+    yield 'none'
+
+    if(config.password) {
+      log.debug('auth: password')
+      yield 'password'
+    }
+
+    if(config.privateKey) {
+      log.debug('auth: publickey')
+      yield 'publickey'
+    }
+
+    if(config.agent || config.agentForward) {
+      log.debug('auth: agent')
+      yield 'agent'
+    }
+
+    let tryKbWithPassword = false
+    log.debug('auth: keyboard-interactive try pass')
+    yield {
+      username: config.username!,
+      type: 'keyboard-interactive',
+      prompt: (
+        name: string,
+        instructions: string,
+        lang: string,
+        prompts: Prompt[],
+        finish: KeyboardInteractiveCallback,
+      )=> {
+        if(config.password && prompts.length === 1 && prompts[0].prompt.includes('assword')) {
+          tryKbWithPassword = true
+          finish([config.password])
+        } else {
+          this.keyboardInteractiveFinish = finish
+          this.emit('try-keyboard', prompts)
+        }
+      }
+    }
+
+    if(tryKbWithPassword) {
+      log.debug('auth: keyboard-interactive')
+      yield {
+        username: config.username!,
+        type: 'keyboard-interactive',
+        prompt: (
+          name: string,
+          instructions: string,
+          lang: string,
+          prompts: Prompt[],
+          finish: KeyboardInteractiveCallback,
+        )=> {
+          this.keyboardInteractiveFinish = finish
+          this.emit('try-keyboard', prompts)
+        }
+      }
+    }
+
+    log.debug('auth: hostbased')
+    yield 'hostbased'
   }
 
   shell(window: PseudoTtyOptions): Promise<ClientChannel> {
