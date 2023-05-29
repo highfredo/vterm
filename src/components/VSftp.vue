@@ -1,5 +1,7 @@
 <template>
-  <div class="full-height force-scroll">
+  <div class="full-height force-scroll"
+       @drop.prevent.stop="upload"
+       @dragover.prevent.stop>
     <q-table
       card-class="bg-transparent"
       flat
@@ -88,6 +90,13 @@ const click = (evt: Event, fileEntry: SFTPFile) => {
 
 const goback = () => {
   pathRef.value = join(pathRef.value, '../')
+}
+
+const upload = (evt) => {
+  for (const { path } of evt.dataTransfer.files) {
+    console.log('File Path of dragged files: ', path)
+    window.ssh.upload(props.profile.id, path, join(pathRef.value, path.replace(/^.*[\\\/]/, '')))
+  }
 }
 
 </script>
