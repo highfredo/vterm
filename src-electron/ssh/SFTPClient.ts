@@ -1,16 +1,23 @@
 import { FileEntry, SFTPWrapper, Stats } from 'ssh2'
 import { EventEmitter } from 'events'
 import { constants } from 'fs'
+import { SFTPTransfer } from 'app/src-electron/ssh/SFTPTransfer';
+import { debounce } from 'lodash';
+import log from 'electron-log';
+import { dialog, app } from 'electron'
+import { basename, join } from 'path';
 
-export type ProgressCb = (bytes: number, total: number) => void
 
-export type Transfer = {
+export type ProgressInfo = {
+  id: number
   mode: 'upload' | 'download'
-  status: 'queued' | 'progress'
-  bytes: number
+  status: 'queued' | 'progress' | 'finished'
+  speed: number // bytes per second
+  transferred: number
   total: number
   localFile: string
   remoteFile: string
+  error?: Error
 }
 
 export type SFTPFile = {
@@ -55,7 +62,11 @@ export const fileEntryToFile = (entry: FileEntry): SFTPFile => {
 
 export class SFTPClient extends EventEmitter {
 
-  transfers: Transfer[] = []
+  private nextId = 0
+  private _transfers: {
+    id: number
+    transfer: SFTPTransfer
+  }[] = []
 
   constructor(
     private wrapper: SFTPWrapper
@@ -64,12 +75,58 @@ export class SFTPClient extends EventEmitter {
     wrapper.on('close', () => this.emit('close'))
   }
 
-  async download(remoteFile: string, localFile: string, progress: ProgressCb) {
-    // this.wrapper.wri
+  transfers(): ProgressInfo[] {
+    return this._transfers.map(t => {
+      return {
+        id: t.id,
+        mode: t.transfer.mode,
+        status: t.transfer.status,
+        speed: t.transfer.speed,
+        transferred: t.transfer.transferred,
+        total: t.transfer.total,
+        localFile: t.transfer.localFile,
+        remoteFile: t.transfer.remoteFile,
+        error: t.transfer.error,
+      } as ProgressInfo
+    })
   }
 
-  async upload(localFile: string, remoteFile: string, progress: ProgressCb) {
-    // this.wrapper.wri
+  async download(remoteFile: string, localFile?: string): Promise<void> {
+    let file = localFile
+
+    if(!file) {
+      const { filePath } = await dialog.showSaveDialog({
+        title: 'guardar',
+        defaultPath: join(app.getPath('downloads'), basename(remoteFile))
+      })
+      file = filePath
+    }
+
+    if(file) {
+      this.doTransfer(remoteFile, file, 'download')
+    }
+  }
+
+  async upload(localFile: string, remoteFile: string): Promise<void> {
+    this.doTransfer(remoteFile, localFile, 'upload')
+  }
+
+  private async doTransfer(remoteFile: string, localFile: string, mode: 'upload' | 'download') {
+    // TODO ignorar si ya se está descargando o error si el fichero ya existe?
+    log.debug(remoteFile, localFile)
+    const ts = new SFTPTransfer(this.wrapper, remoteFile, localFile, mode)
+    this._transfers.push({
+      id: this.nextId++,
+      transfer: ts
+    })
+
+    await ts.open()
+
+    ts.start(debounce(() => {
+      this.emit('transfer')
+    }, 1000, {maxWait: 1000, leading: true}))
+
+    return ts
   }
 
   async stat(remotePath: string): Promise<Stats> {

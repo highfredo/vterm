@@ -189,6 +189,9 @@ export class SSHProfileSession extends EventEmitter implements RunStatus {
       this.sftpClient.on('close', () => {
         this.sftpClient = undefined
       })
+      this.sftpClient.on('transfer', () => {
+        this.emit('transfer')
+      })
     }
 
     return this.sftpClient

@@ -54,6 +54,10 @@ export const retrieveSSHSession = (profileId: string, sender: WebContents, notif
       sender.send('profile:update', session.info())
     }, 300, {maxWait: 300, leading: true}))
 
+    session.on('transfer', () => {
+      sender.send('sftp:transfer', session.profile.id, session.sftpClient?.transfers() || [])
+    })
+
     sshSessions[profileId] = session
   }
 

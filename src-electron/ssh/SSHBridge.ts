@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 import { Prompt } from 'ssh2'
 import { ProfileParams, SshTunnelParams } from 'src/types'
-import { SFTPFile } from 'app/src-electron/ssh/SFTPClient'
+import { ProgressInfo, SFTPFile } from 'app/src-electron/ssh/SFTPClient';
 
 const api = {
   tryKeyboard(profileId: string, response: string[]) {
@@ -34,6 +34,17 @@ const api = {
   },
   async realpath(profileId: string, path: string): Promise<string> {
     return ipcRenderer.invoke('sftp:realpath', profileId, path)
+  },
+  download(profileId: string, remotePath: string, localPath?: string) {
+    ipcRenderer.send('sftp:download', profileId, remotePath, localPath)
+  },
+  upload(profileId: string, localPath: string, remotePath: string) {
+    ipcRenderer.send('sftp:upload', profileId, localPath, remotePath)
+  },
+  onTransfer(cb: (profileId: string, progress: ProgressInfo[]) => void) {
+    return ipcRenderer.on('sftp:transfer', (event: IpcRendererEvent, profileId: string, progress: ProgressInfo[]) => {
+      cb(profileId, progress)
+    })
   }
 }
 

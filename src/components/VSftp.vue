@@ -43,6 +43,7 @@ import { ProfileParams } from 'src/types'
 import { SFTPFile } from 'app/src-electron/ssh/SFTPClient'
 import { join } from 'path-browserify'
 import { date, format } from 'quasar'
+import { useSFTPTransfer } from 'src/composables/useSFTPTransfers';
 const { humanStorageSize } = format
 const { formatDate } = date
 
@@ -70,6 +71,8 @@ const columns = [
 })
 
 const sftp = useSFTP(props.profile.id)
+const transfers = useSFTPTransfer()
+transfers.init()
 
 const pathRef = ref('.')
 const {loading, entries, error, refresh} = sftp.readdir(pathRef)
@@ -79,7 +82,7 @@ const click = (evt: Event, fileEntry: SFTPFile) => {
   if(fileEntry.isDirectory) {
     pathRef.value = join(pathRef.value, fileEntry.name)
   } else {
-    console.log('not a directory')
+    window.ssh.download(props.profile.id, fileEntry.name)
   }
 }
 

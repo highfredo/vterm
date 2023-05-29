@@ -27,6 +27,7 @@
     "lodash-es": "^4.17.21",
     "node-pty": "^0.10.1",
     "read-last-lines": "^1.8.0",
+    "speedometer": "^1.1.0",
     "ssh2": "^1.13.0",
     "uuid": "^9.0.0"
   },

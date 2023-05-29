@@ -45,3 +45,15 @@ ipcMain.handle('sftp:realpath', async (event: IpcMainInvokeEvent, profileId: str
   const sftp = await session.sftp()
   return sftp.realpath(path)
 })
+
+ipcMain.on('sftp:download', async (event: IpcMainInvokeEvent, profileId: string, remotePath: string, localPath: string) => {
+  const session = await retrieveSSHSession(profileId, event.sender).init()
+  const sftp = await session.sftp()
+  sftp.download(remotePath, localPath)
+})
+
+ipcMain.on('sftp:upload', async (event: IpcMainInvokeEvent, profileId: string, localPath: string, remotePath: string) => {
+  const session = await retrieveSSHSession(profileId, event.sender).init()
+  const sftp = await session.sftp()
+  sftp.upload(localPath, remotePath)
+})
