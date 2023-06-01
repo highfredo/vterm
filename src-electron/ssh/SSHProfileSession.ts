@@ -29,12 +29,11 @@ const workspaceStore = getStore('workspace')
 const getIdentity = async (profile: SshProfileParams): Promise<SshIdentity> => {
   const result: SshIdentity = { }
 
-  if(profile.identity) {
-    const identity = workspaceStore.find('identities', profile.identity)
-    result.username = identity.username ?? profile.username
-    result.password = identity.password ?? profile.password
-    result.privateKey = identity.privateKey ?? profile.privateKey
-  }
+  const identity = profile.identity ? workspaceStore.find('identities', profile.identity) : undefined
+
+  result.username = identity?.username ?? profile.username
+  result.password = identity?.password ?? profile.password
+  result.privateKey = identity?.privateKey ?? profile.privateKey
 
   if(!result.username) {
     result.username = userInfo().username
