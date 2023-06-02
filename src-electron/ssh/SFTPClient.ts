@@ -24,6 +24,7 @@ export type SFTPFile = {
   isDirectory: boolean
   isSymbolicLink: boolean
   name: string
+  path: string
   uid: number
   gid: number
   size: number
@@ -32,7 +33,7 @@ export type SFTPFile = {
   permissions: string
 }
 
-export const fileEntryToFile = (entry: FileEntry): SFTPFile => {
+export const fileEntryToFile = (entry: FileEntry, path: string): SFTPFile => {
   const permissions: string[] = []
   permissions.push(entry.attrs.mode & 300 ? 'r' : '-')
   permissions.push(entry.attrs.mode & 200 ? 'w' : '-')
@@ -51,6 +52,7 @@ export const fileEntryToFile = (entry: FileEntry): SFTPFile => {
     isDirectory: (entry.attrs.mode & constants.S_IFDIR) === constants.S_IFDIR,
     isSymbolicLink: (entry.attrs.mode & constants.S_IFLNK) === constants.S_IFLNK,
     name: entry.filename,
+    path,
     uid: entry.attrs.uid,
     gid: entry.attrs.gid,
     size: entry.attrs.size,
@@ -144,7 +146,7 @@ export class SFTPClient extends EventEmitter {
         if(error) {
           reject(error)
         } else {
-          resolve(entries.map(fileEntryToFile))
+          resolve(entries.map(e => fileEntryToFile(e, remotePath)))
         }
       })
     })

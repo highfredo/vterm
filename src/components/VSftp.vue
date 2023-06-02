@@ -81,10 +81,11 @@ const {loading, entries, error, refresh} = sftp.readdir(pathRef)
 watch(loading, (e) => console.log('loading', e))
 
 const click = (evt: Event, fileEntry: SFTPFile) => {
+  const fullpath = join(fileEntry.path, fileEntry.name)
   if(fileEntry.isDirectory) {
-    pathRef.value = join(pathRef.value, fileEntry.name)
+    pathRef.value = fullpath
   } else {
-    window.ssh.download(props.profile.id, fileEntry.name)
+    window.ssh.download(props.profile.id, fullpath)
   }
 }
 
