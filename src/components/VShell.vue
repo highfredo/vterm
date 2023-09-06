@@ -58,7 +58,7 @@ hotkey.on('copy', () => {
     $q.notify('Copiado.')
     window.wincontrol.clipboardWriteText(vterm.terminal.getSelection())
   } else {
-    vterm.terminal.paste('\x03')
+    vterm.handler.value?.write('\x03')
   }
 }, terminal)
 
