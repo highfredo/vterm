@@ -136,6 +136,14 @@ export async function createWindow() {
     })
   }
 
+  mainWindow.on('focus', () => {
+    mainWindow.webContents.send('window:focus')
+  })
+
+  mainWindow.on('blur', () => {
+    mainWindow.webContents.send('window:blur')
+  })
+
   /**
    * URL for main window.
    */

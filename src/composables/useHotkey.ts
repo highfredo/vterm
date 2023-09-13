@@ -33,7 +33,7 @@ const keyAlias: Record<string, string> = {
   'left': 'arrowleft',
   'right': 'arrowright',
 }
-const calcHotkeyMatch = (event: KeyboardEvent): string | undefined => {
+const calcHotkeyMatch = (): string | undefined => {
   hotkeyMatch = undefined
 
   if(keyBuffer.size === 0) {
@@ -95,20 +95,28 @@ const api = {
     const binding: HotkeyBinding = {
       cb: etCb
     }
-    namedHotkey.bindings.push(binding)
 
-    emitter.addEventListener(name, etCb)
+    let enabled = false
 
     const reanudable = {
       start() {
+        if(enabled)
+          return
+        enabled = true
         emitter.addEventListener(name, etCb)
         namedHotkey.bindings.push(binding)
       },
       stop() {
+        console.log('desactivado', name)
+        if(!enabled)
+          return
+        enabled = false
         emitter.removeEventListener(name, etCb)
         namedHotkey.bindings = namedHotkey.bindings.filter( h => h.cb !== etCb)
       }
     }
+
+    reanudable.start()
 
     onDeactivated(reanudable.stop)
     onActivated(reanudable.start)
@@ -124,7 +132,7 @@ const api = {
       return
     }
 
-    calcHotkeyMatch(event)
+    calcHotkeyMatch()
     if(hotkeyMatch) {
       console.log('hk match:', hotkeyMatch)
       emitter.dispatchEvent(new CustomEvent(hotkeyMatch, {
@@ -143,6 +151,9 @@ const api = {
 
 document.addEventListener('keyup', api.addKeyEvent)
 document.addEventListener('keydown', api.addKeyEvent)
+window.wincontrol.onFocus(() => keyBuffer.clear())
+window.wincontrol.onBlur(() => keyBuffer.clear())
+
 
 export function useHotKey() {
   if(!init) {

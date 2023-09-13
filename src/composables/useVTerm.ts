@@ -5,7 +5,6 @@ import {FitAddon} from 'xterm-addon-fit'
 import {WebLinksAddon} from 'xterm-addon-web-links'
 import {SearchAddon} from 'xterm-addon-search'
 import { WebglAddon } from 'xterm-addon-webgl'
-// import { CanvasAddon } from 'xterm-addon-canvas'
 import { useConfigStore } from 'stores/config-store'
 import { watchDebounced, useElementSize } from '@vueuse/core'
 import { onActivated, onDeactivated, ref, Ref, WatchStopHandle } from 'vue'
@@ -34,6 +33,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   search: SearchAddon
   fitAddon: FitAddon
   stopFitWatch: WatchStopHandle | undefined
+  webgl = new WebglAddon()
 
   constructor() {
     this.id = v4()
@@ -93,6 +93,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   close(): void {
     this.stopFitWatch && this.stopFitWatch()
     this.handler.value?.close()
+    this.webgl.dispose()
     this.terminal.dispose()
   }
 
@@ -108,14 +109,13 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   open(element: HTMLElement, profileId?: string): void {
     const { width, height } = useElementSize(element)
 
-    const webgl = new WebglAddon()
     const start = () => {
       this.fitAddon.fit()
       this.terminal.focus()
       return watchDebounced([width, height], () => {
         console.log('fit!')
         this.fitAddon.fit()
-        // webgl.clearTextureAtlas()
+        this.webgl.clearTextureAtlas()
       }, { debounce: 300, maxWait: 1000 })
     }
 
@@ -132,8 +132,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
     /**
      * WebglAddon Addon
      */
-    this.terminal.loadAddon(webgl)
-    // this.terminal.loadAddon(new CanvasAddon())
+    this.terminal.loadAddon(this.webgl)
 
     this.stopFitWatch = start()
 

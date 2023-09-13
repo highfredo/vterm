@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron'
 
 contextBridge.exposeInMainWorld('wincontrol', {
+  onFocus(cb: () => void) {
+    ipcRenderer.on('window:focus', cb)
+  },
+  onBlur(cb: () => void) {
+    ipcRenderer.on('window:blur', cb)
+  },
   onIsMaximize(cb: (itIs: boolean) => void) {
     ipcRenderer.on('window:is-maximize', (event: IpcRendererEvent, itIs: boolean) => {
       cb(itIs)

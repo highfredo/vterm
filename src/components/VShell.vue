@@ -10,7 +10,7 @@
 <script setup lang="ts">
 import 'xterm/css/xterm.css'
 import useVTerm from 'src/composables/useVTerm'
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 import SearchPrompt from 'components/SearchPrompt.vue'
 import { useHotKey } from 'src/composables/useHotkey'
 import { useQuasar } from 'quasar'
@@ -38,7 +38,7 @@ onMounted(() => {
   vterm.open(terminal.value, props.profile.id)
 })
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   vterm.close()
 })
 
