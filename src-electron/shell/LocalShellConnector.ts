@@ -18,6 +18,7 @@ export class LocalConnection extends Connection {
   }
 
   async init() {
+    console.log(this.profile)
     this.ptyProcess = spawn(this.profile.exe, this.profile.args ?? '', {
       cwd: homedir(),
       ...this.profile,

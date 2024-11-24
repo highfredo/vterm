@@ -45,6 +45,7 @@
       <q-page style="height: calc(100vh - 37px);">
         <keep-alive v-if="tabStore.tabs.length">
           <tab-content
+            v-if="tabStore.currentTab?.id"
             :key="tabStore.currentTab?.id"
             :tab="tabStore.currentTab"
           />

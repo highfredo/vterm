@@ -2,6 +2,7 @@ import { LocalProfileParams, ProfileParams, SshProfileInfo, SshTunnelInfo } from
 import { findSSHSession, getSshProfileName } from 'app/src-electron/ssh/SSHSessionManager'
 import { getStore } from 'app/src-electron/Store'
 
+// TODO redo this
 const workspaceStore = getStore('workspace', {
   defaults: {
     'name': 'Default',
@@ -62,6 +63,7 @@ const fillLocalProfile = (profile: ProfileParams) => {
   return profile
 }
 
+// TODO dividir profile de estado?
 const fillSshProfile = (profile: SshProfileInfo) => {
   const session = findSSHSession(profile.id)
 

@@ -38,6 +38,11 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   constructor() {
     this.id = v4()
     this.terminal = new Terminal({
+      // windowsMode: true,
+      // windowsPty: {
+      //   backend: 'winpty', // 'conpty' | 'winpty';
+      //   buildNumber: 22621
+      // },
       allowProposedApi: true,
       fontFamily: "'MesloLGS NF', courier-new, courier, monospace",
       theme: {
@@ -77,6 +82,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
      */
     const hk = useHotKey()
     this.terminal.attachCustomKeyEventHandler((evt: KeyboardEvent) => {
+      // console.log(evt)
       if(enableHotkeys.value) {
         const found = hk.addKeyEvent(evt)
         if(found) {
@@ -107,34 +113,30 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   }
 
   open(element: HTMLElement, profileId?: string): void {
-    const { width, height } = useElementSize(element)
 
     const start = () => {
+      const { width, height } = useElementSize(element)
       this.fitAddon.fit()
+      this.webgl.clearTextureAtlas()
       this.terminal.focus()
-      return watchDebounced([width, height], () => {
-        console.log('fit!')
-        this.fitAddon.fit()
-        this.webgl.clearTextureAtlas()
-      }, { debounce: 300, maxWait: 1000 })
+      setTimeout(() => {
+        this.stopFitWatch = watchDebounced([width, height], () => {
+          this.fitAddon.fit()
+          this.webgl.clearTextureAtlas()
+        }, { debounce: 300, maxWait: 1000 })
+      })
     }
 
     onDeactivated(() => {
       this.stopFitWatch && this.stopFitWatch()
     })
 
-    onActivated(() => {
-      this.stopFitWatch = start()
-    })
-
-    this.terminal.open(element)
+    onActivated(start)
 
     /**
      * WebglAddon Addon
      */
     this.terminal.loadAddon(this.webgl)
-
-    this.stopFitWatch = start()
 
     this.terminal.onData((data: string) => {
       this.handler.value?.write(data)
@@ -143,6 +145,12 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
     this.terminal.onResize(() => {
       this.handler.value?.resize(this.dimensions())
     })
+
+    /**
+     * Init
+     */
+    this.terminal.open(element)
+    start()
 
     if(profileId) {
       this.connect(profileId)
