@@ -1,10 +1,10 @@
-import { Terminal } from 'xterm'
+import { Terminal } from '@xterm/xterm'
 import { IBaseShellHandler, ShellDimensions } from '@/types'
 import { v4 } from 'uuid'
-import { FitAddon } from 'xterm-addon-fit'
-import { WebLinksAddon } from 'xterm-addon-web-links'
-import { SearchAddon } from 'xterm-addon-search'
-import { WebglAddon } from 'xterm-addon-webgl'
+import { FitAddon } from '@xterm/addon-fit'
+import { WebLinksAddon } from '@xterm/addon-web-links'
+import { SearchAddon } from '@xterm/addon-search'
+import { WebglAddon } from '@xterm/addon-webgl'
 import { useConfigStore } from '@/stores/config-store'
 import { watchDebounced, useElementSize } from '@vueuse/core'
 import { onActivated, onDeactivated, ref, Ref, WatchStopHandle } from 'vue'
@@ -38,7 +38,6 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   constructor() {
     this.id = v4()
     this.terminal = new Terminal({
-      allowProposedApi: true,
       fontFamily: "'MesloLGS NF', courier-new, courier, monospace",
       theme: {
         background: getCssVar('dark-page') ?? 'black',
@@ -119,7 +118,6 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
         () => {
           console.log('fit!')
           this.fitAddon.fit()
-          this.webgl.clearTextureAtlas()
         },
         { debounce: 300, maxWait: 1000 }
       )

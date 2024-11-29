@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { VTerm } from '@/composables/useVTerm'
-import { ISearchOptions } from 'xterm-addon-search'
+import { ISearchOptions } from '@xterm/addon-search'
 import { useHotKey } from '@/composables/useHotkey'
 import { unrefElement } from '@vueuse/core'
 import { useQuasar } from 'quasar'

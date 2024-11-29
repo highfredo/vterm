@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import 'xterm/css/xterm.css'
+import '@xterm/xterm/css/xterm.css'
 import useVTerm from '@/composables/useVTerm'
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import SearchPrompt from '@/components/SearchPrompt.vue'
