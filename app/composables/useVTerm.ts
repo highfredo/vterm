@@ -113,6 +113,9 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
     const start = () => {
       this.fitAddon.fit()
       this.terminal.focus()
+      // thanks Tabby for the next line!
+      // https://github.com/Eugeny/tabby/blob/ac6f60f1ae9ca754b22f15e06cf55a7574b1f9d5/tabby-terminal/src/frontends/xtermFrontend.ts#L61
+      this.terminal['_core'].viewport._refresh()
       return watchDebounced(
         [width, height],
         () => {
