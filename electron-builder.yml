@@ -1,26 +1,27 @@
 appId: vterm
 productName: vterm
-directories:
-  buildResources: resources
 files:
-  - '!**/.vscode/*'
-  - '!app/*'
-  - '!electron/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+  - 'resources/**'
+  - 'out/**'
 asarUnpack:
   - resources/**
+npmRebuild: false
+publish:
+  provider: generic
+  url: https://example.com/auto-updates
+
+
 win:
   executableName: vterm
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  createDesktopShortcut: always
+  oneClick: false
+  installerIcon: "resources/icon.ico"
+  allowToChangeInstallationDirectory: true
 mac:
-  entitlementsInherit: resources/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
@@ -38,7 +39,3 @@ linux:
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
-npmRebuild: false
-publish:
-  provider: generic
-  url: https://example.com/auto-updates
