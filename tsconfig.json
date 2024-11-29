@@ -1,6 +1,4 @@
 {
-  "extends": "@quasar/app-vite/tsconfig-preset",
-  "compilerOptions": {
-    "baseUrl": "."
-  }
+  "files": [],
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.web.json" }]
 }

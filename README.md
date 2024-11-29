@@ -4,31 +4,29 @@ Just another terminal emulator.
 
 In development, much work to be done
 
-## Install the dependencies
+## Project Setup
+
+### Install
+
 ```bash
-npm install
+$ npm install
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+### Development
+
 ```bash
-npm run dev:electron
+$ npm run dev
 ```
 
+### Build
 
-### Lint the files
 ```bash
-npm run lint
-```
+# For windows
+$ npm run build:win
 
+# For macOS
+$ npm run build:mac
 
-### Format the files
-```bash
-npm run format
-```
-
-
-
-### Build the app for production
-```bash
-npm run build:electron
+# For Linux
+$ npm run build:linux
 ```

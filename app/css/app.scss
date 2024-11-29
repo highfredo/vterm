@@ -1,0 +1,44 @@
+// app global css in SCSS form
+@use "sass:color";
+@import "quasar.variables";
+
+html {
+  overflow: hidden;
+}
+
+// Header height
+.q-bar--big  {
+  height: 37px;
+}
+
+.q-tab  {
+  min-height: 37px;
+}
+
+// New colors
+.text-negative-light {
+  color: color.adjust($negative, $lightness: 20%) !important;
+}
+.bg-negative-light {
+  background: color.adjust($negative, $lightness: 20%) !important;
+}
+
+// Scroll
+.force-scroll {
+  overflow-y: scroll;
+  overflow-x: auto;
+}
+
+::-webkit-scrollbar {
+  width: 15px;
+}
+
+::-webkit-scrollbar-track {
+  background: $primary;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: color.adjust($primary, $lightness: 30%);
+  border-radius: 20px;
+  border: 3px solid $primary;
+}

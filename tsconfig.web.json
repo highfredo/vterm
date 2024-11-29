@@ -1,0 +1,16 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "include": [
+    "app/env.d.ts",
+    "app/**/*",
+    "app/**/*.vue",
+    "electron/*.d.ts"
+  ],
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": "app",
+    "paths": {
+      "@/*": ["./*"]
+    }
+  }
+}
