@@ -1,4 +1,4 @@
-import { LocalProfileParams, ShellDimensions, ShellRequest } from '../../app/types'
+import { LocalProfile, ShellDimensions, ShellRequest } from '../../app/types'
 import { IPty, spawn } from 'node-pty'
 import WebContents = Electron.WebContents
 import log from 'electron-log'
@@ -9,7 +9,7 @@ export class LocalConnection extends Connection {
   ptyProcess: IPty | undefined
 
   constructor(
-    private profile: LocalProfileParams,
+    private profile: LocalProfile,
     private shellRequest: ShellRequest,
     sender: WebContents
   ) {

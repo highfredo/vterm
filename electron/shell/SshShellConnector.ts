@@ -1,4 +1,4 @@
-import { ShellDimensions, ShellRequest, SshProfileParams } from '../../app/types'
+import { ShellDimensions, ShellRequest, SshProfile } from '../../app/types'
 import { Connection } from './AbstractShellConnector'
 import { ClientChannel } from 'ssh2'
 import WebContents = Electron.WebContents
@@ -8,7 +8,7 @@ export class SshShellConnection extends Connection {
   shell: ClientChannel | undefined
 
   constructor(
-    private profile: SshProfileParams,
+    private profile: SshProfile,
     private shellRequest: ShellRequest,
     sender: WebContents
   ) {

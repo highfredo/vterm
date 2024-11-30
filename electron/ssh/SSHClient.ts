@@ -11,7 +11,7 @@ import {
   PseudoTtyOptions,
   VerifyCallback
 } from 'ssh2'
-import { SshLocalTunnelParams } from '../../app/types'
+import { SshLocalTunnel } from '../../app/types'
 import log from 'electron-log'
 import { Server } from 'net'
 import { EventEmitter } from 'events'
@@ -38,9 +38,10 @@ export class SSHClient extends EventEmitter {
 
     this.client.on('error', (err: Error & ClientErrorExtensions) => {
       if (!this.validHostkey && err.message === 'All configured authentication methods failed') {
-        return this.emit('error', new Error('hostkey not valid'))
+        this.emit('error', new Error('hostkey not valid'))
+      } else {
+        this.emit('error', err)
       }
-      this.emit('error', err)
     })
 
     this.client.on('close', () => {
@@ -75,7 +76,11 @@ export class SSHClient extends EventEmitter {
 
         return true
       },
-      authHandler(authsLeft: AuthenticationType[], partialSuccess: boolean, next: NextAuthHandler) {
+      authHandler(
+        _authsLeft: AuthenticationType[],
+        _partialSuccess: boolean,
+        next: NextAuthHandler
+      ) {
         handshakePromise.then(async (hostValid) => {
           if (hostValid) {
             next(authMethods.next().value || false)
@@ -114,9 +119,9 @@ export class SSHClient extends EventEmitter {
       username: config.username!,
       type: 'keyboard-interactive',
       prompt: (
-        name: string,
-        instructions: string,
-        lang: string,
+        _name: string,
+        _instructions: string,
+        _lang: string,
         prompts: Prompt[],
         finish: KeyboardInteractiveCallback
       ) => {
@@ -136,9 +141,9 @@ export class SSHClient extends EventEmitter {
         username: config.username!,
         type: 'keyboard-interactive',
         prompt: (
-          name: string,
-          instructions: string,
-          lang: string,
+          _name: string,
+          _instructions: string,
+          _lang: string,
           prompts: Prompt[],
           finish: KeyboardInteractiveCallback
         ) => {
@@ -163,7 +168,7 @@ export class SSHClient extends EventEmitter {
     })
   }
 
-  async localTunnel(config: SshLocalTunnelParams): Promise<Server> {
+  async localTunnel(config: SshLocalTunnel): Promise<Server> {
     log.debug('Creando tunel', config)
 
     const server = await openServer(config.localHost, config.localPort, async (socket) => {
@@ -188,7 +193,7 @@ export class SSHClient extends EventEmitter {
           channel.close()
         })
 
-        channel.on('error', (err: any) => {
+        channel.on('error', (err: unknown) => {
           log.error('Channel error', err)
         })
       } catch (e) {

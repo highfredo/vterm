@@ -38,6 +38,7 @@ class VTermImpl implements VTerm<IBaseShellHandler> {
   constructor() {
     this.id = v4()
     this.terminal = new Terminal({
+      allowProposedApi: true,
       fontFamily: "'MesloLGS NF', courier-new, courier, monospace",
       theme: {
         background: getCssVar('dark-page') ?? 'black',

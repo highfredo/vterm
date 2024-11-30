@@ -1,11 +1,6 @@
 import type { IpcMainInvokeEvent } from 'electron'
 import { ipcMain } from 'electron'
-import {
-  LocalProfileParams,
-  ShellDimensions,
-  ShellRequest,
-  SshProfileParams
-} from '../../app/types'
+import { LocalProfile, ShellDimensions, ShellRequest, SshProfile } from '../../app/types'
 import { LocalConnection } from '@/shell/LocalShellConnector'
 import { SshShellConnection } from '@/shell/SshShellConnector'
 import log from 'electron-log'
@@ -19,8 +14,8 @@ ipcMain.handle('shell:new', async (event: IpcMainInvokeEvent, shellRequest: Shel
   log.debug('Perfil de la shell: ', shellRequest.profileId)
   const connection =
     profile.type === 'local'
-      ? new LocalConnection(profile as LocalProfileParams, shellRequest, event.sender)
-      : new SshShellConnection(profile as SshProfileParams, shellRequest, event.sender)
+      ? new LocalConnection(profile as LocalProfile, shellRequest, event.sender)
+      : new SshShellConnection(profile as SshProfile, shellRequest, event.sender)
 
   const close = () => {
     connection.close()
@@ -29,7 +24,7 @@ ipcMain.handle('shell:new', async (event: IpcMainInvokeEvent, shellRequest: Shel
 
   connection.init().then(
     () => {
-      ipcMain.on(connection.channel, (event: IpcMainInvokeEvent, type: string, args: unknown) => {
+      ipcMain.on(connection.channel, (_event: IpcMainInvokeEvent, type: string, args: unknown) => {
         if (type === 'write') {
           connection.write(args as string)
         } else if (type === 'resize') {
@@ -40,7 +35,7 @@ ipcMain.handle('shell:new', async (event: IpcMainInvokeEvent, shellRequest: Shel
       })
       connection.send('ready')
     },
-    (error: any) => {
+    (error: unknown) => {
       connection.send('error', error)
       close()
     }
