@@ -2,7 +2,7 @@ import { onActivated, onDeactivated } from 'vue'
 import type { MaybeElementRef } from '@vueuse/core'
 import { unrefElement } from '@vueuse/core'
 import { useConfigStore } from '@/stores/config-store'
-import { isEqual, forEach } from 'lodash-es'
+import { isEqual } from 'lodash-es'
 
 type HotkeyBinding = {
   cb: (event: KeyboardEvent) => void
@@ -42,16 +42,19 @@ const calcHotkeyMatch = (): string | undefined => {
 
   const pressedKeys = [...keyBuffer].sort()
 
-  forEach(hotkeys, (value: NamedHotkey) => {
-    if (value.keys.some((keys) => isEqual(keys, pressedKeys))) {
-      if (!value.bindings.length) {
-        console.warn('No hay ningún evento registrado para el hotkey', value.name)
-        return
-      }
-      hotkeyMatch = value.name
-      return false
+  for (const value of hotkeys) {
+    if (!value.keys.some((keys) => isEqual(keys, pressedKeys))) {
+      continue
     }
-  })
+
+    if (!value.bindings.length) {
+      console.warn('No hay ningún evento registrado para el hotkey', value.name)
+      break
+    }
+
+    hotkeyMatch = value.name
+    break
+  }
 
   return hotkeyMatch
 }
@@ -124,8 +127,19 @@ const api = {
 
     reanudable.start()
 
-    onDeactivated(reanudable.stop)
-    onActivated(reanudable.start)
+    // al desactivar el componente guarda el estado
+    // para luego reanuadar el hotkey si antes
+    // estaba activo
+    let prevEnabled = false
+    onDeactivated(() => {
+      prevEnabled = enabled
+      reanudable.stop()
+    })
+    onActivated(() => {
+      if (prevEnabled) {
+        reanudable.start()
+      }
+    })
 
     return reanudable
   },
